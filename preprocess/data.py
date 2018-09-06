@@ -5,7 +5,71 @@ import matplotlib.pyplot as plt
 
 
 
-def get_data_statics(data_dir,output_dir,val_label_num = 20,feature_val_ratio = 0.1):
+def test_sythesis(test_data_dir,output_dir,label='ZJL211'):
+    
+    imgs = os.listdir(test_data_dir)
+    with open(os.path.join(output_dir,'test.txt'),'w') as f:
+        for img_name in imgs:
+            if '.jpg' in img_name:
+                f.write('{}\t{}\n'.format(img_name,label))
+
+
+def group_class_label(data_dir,output_dir):
+    group_names = ['animal','transportation','clothes','plant','tableware','device']
+    groups = [[],[],[],[],[],[]]
+
+    label_to_name = {}
+    with open(os.path.join(data_dir,'processed/trainval_label.txt')) as f:
+        for line in f:
+            label,name = line.strip().split()
+            label_to_name[label] = name
+    label_to_attribute = {}
+    with open(os.path.join(data_dir,'attributes_per_class.txt')) as f:
+        for line in f:
+            label_attribute = line.strip().split()
+            label,attribute = label_attribute[0],label_attribute[1:]
+            if label in label_to_name:
+                attribute = [float(i) for i in attribute]
+                label_to_attribute[label] = attribute
+
+    for label,attribute in label_to_attribute.items():
+        group_attribute = attribute[:len(groups)]
+        for i,attr in enumerate(group_attribute):
+            if attr == 1:
+                groups[i].append(label)
+    for i,name in enumerate(group_names):
+        with open(os.path.join(output_dir,'{}_label.txt'.format(name)),'w') as f:
+            for label in groups[i]:
+                f.write('{}\t{}\n'.format(label,label_to_name[label]))
+    label_to_imgname = {}
+    with open(os.path.join(data_dir,'train.txt')) as f:
+        for line in f:
+            name,label = line.strip().split()
+            g = label_to_imgname.get(label,[])
+            g.append(name)
+            label_to_imgname[label] = g
+    for i,name in enumerate(group_names):
+        with open(os.path.join(output_dir,'{}.txt'.format(name)),'w') as f:
+            for label in groups[i]:
+                for img_name in label_to_imgname[label]:
+                    f.write('{}\t{}\n'.format(img_name,label))
+            
+    
+
+def change_space_to_tab(input_file):
+    name_to_label = {}
+    with open(input_file,'r') as f:
+        for line in f:
+            name,label = line.strip().split()
+            name_to_label[name] = label
+    with open('submit.txt','w') as f:
+        for name,label in name_to_label.items():
+            f.write('{}\t{}\n'.format(name,label))
+
+
+
+
+def get_data_statics(data_dir,output_dir,val_label_num = 40,feature_val_ratio = 0.15):
 
     trainval_file_path = 'train.txt'
     label_list_file_path = 'label_list.txt'
@@ -87,7 +151,11 @@ def get_data_statics(data_dir,output_dir,val_label_num = 20,feature_val_ratio = 
             f.write('{}\t{}\n'.format(sample['image_name'],sample['label']))
 
 if __name__ == '__main__':
+    change_space_to_tab('../../../../Downloads/submit.txt')
 
-    data_dir = '../source/DatasetA_20180813'
-    output_dir = '../source/DatasetA_20180813/processed'
-    get_data_statics(data_dir,output_dir)
+    # data_dir = '../source/DatasetA_20180813'
+    # output_dir = '../source/DatasetA_20180813/processed/group'
+    # get_data_statics(data_dir,output_dir)
+    # test_data_dir = '../source/DatasetA_20180813/test'
+    # test_sythesis(test_data_dir,output_dir)
+    # group_class_label(data_dir,output_dir)
